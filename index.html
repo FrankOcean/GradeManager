@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>学生成绩管理系统</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-main">
+    <section class="panel">
+      <h2>成绩结构与权重设置</h2>
+      <div class="config-section">
+        <div class="config-list" id="componentList">
+          <!-- 动态生成的成绩结构配置 -->
+        </div>
+        <button id="addComponentBtn" class="btn secondary">新增成绩项目</button>
+        <div class="config-summary" id="configSummary"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>学生信息录入 / 编辑</h2>
+      <form id="studentForm" class="form-grid">
+        <input type="hidden" id="studentId">
+
+        <label>
+          姓名
+          <input type="text" id="studentName" required>
+        </label>
+        <label>
+          学号
+          <input type="text" id="studentNo" required>
+        </label>
+        <label>
+          手动排序序号（可选）
+          <input type="number" id="studentRank" min="1" step="1" placeholder="数字越小排越前">
+        </label>
+
+        <div class="form-full-width">
+          <h3>各项成绩录入</h3>
+          <div id="scoreInputs" class="score-inputs">
+            <!-- 根据当前成绩结构自动生成输入框 -->
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="saveStudentBtn">保存学生信息</button>
+          <button type="button" class="btn" id="resetFormBtn">清空表单</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>学生列表与成绩</h2>
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <label>
+            排序字段：
+            <select id="sortField">
+              <option value="rank">手动排序序号</option>
+              <option value="name">姓名</option>
+              <option value="no">学号</option>
+              <option value="total">总成绩</option>
+            </select>
+          </label>
+          <label>
+            顺序：
+            <select id="sortDirection">
+              <option value="asc">升序</option>
+              <option value="desc">降序</option>
+            </select>
+          </label>
+          <button id="applySortBtn" class="btn">应用排序</button>
+          <!-- 新增导出按钮 -->
+          <button id="exportExcelBtn" class="btn">导出 Excel</button>
+          <!-- 新增：导出数据库按钮 -->
+          <button id="exportDbBtn" class="btn">导出数据库</button>
+
+          <!-- 新增：导入数据按钮（支持 Excel / JSON） -->
+          <button id="importDataBtn" class="btn">导入数据</button>
+          <input type="file" id="importDataInput" accept=".xlsx,.xls,.json" style="display:none">
+        </div>
+        <div class="toolbar-group">
+          <label>
+            搜索姓名 / 学号：
+            <input type="text" id="searchInput" placeholder="输入关键字过滤">
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="studentTable">
+          <thead id="studentTableHead">
+            <!-- 表头由 JS 根据成绩结构生成 -->
+          </thead>
+          <tbody id="studentTableBody">
+            <!-- 学生数据行 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>纯前端实现 · 使用浏览器本地数据库（IndexedDB）存储数据</small>
+  </footer>
+
+  <!-- 新增：引入 SheetJS（xlsx）库 -->
+  <script src="xlsx/full.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
