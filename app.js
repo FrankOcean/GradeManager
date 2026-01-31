@@ -195,7 +195,7 @@ function renderSchemaConfig() {
           <option value="composite" ${component.type === 'composite' ? 'selected' : ''}>可拆分（如多次实验）</option>
         </select>
       </label>
-      <button class="btn danger" data-action="remove-comp" data-comp-index="${index}">删除项目</button>
+      <button class="btn btn-danger" data-action="remove-comp" data-comp-index="${index}">删除项目</button>
     `;
 
     card.appendChild(header);
@@ -215,13 +215,13 @@ function renderSchemaConfig() {
           <label>权重（该项目内部占比）
             <input type="number" min="0" max="100" step="1" value="${sub.weight}" data-comp-index="${index}" data-sub-index="${sIndex}" data-field="sub-weight">
           </label>
-          <button class="btn danger" data-action="remove-sub" data-comp-index="${index}" data-sub-index="${sIndex}">删除子项</button>
+          <button class="btn btn-danger" data-action="remove-sub" data-comp-index="${index}" data-sub-index="${sIndex}">删除子项</button>
         `;
         subList.appendChild(row);
       });
 
       const addSubBtn = document.createElement('button');
-      addSubBtn.className = 'btn secondary';
+      addSubBtn.className = 'btn btn-secondary';
       addSubBtn.textContent = '新增子项';
       addSubBtn.dataset.action = 'add-sub';
       addSubBtn.dataset.compIndex = String(index);
@@ -384,8 +384,8 @@ function renderStudentTable() {
     const actionCol = `
       <td>
         <div class="table-actions">
-          <button class="btn secondary" data-action="edit" data-id="${s.id}">编辑</button>
-          <button class="btn danger" data-action="delete" data-id="${s.id}">删除</button>
+          <button class="btn btn-secondary" data-action="edit" data-id="${s.id}">编辑</button>
+          <button class="btn btn-danger" data-action="delete" data-id="${s.id}">删除</button>
         </div>
       </td>
     `;

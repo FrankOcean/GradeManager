@@ -14,7 +14,7 @@
         <div class="config-list" id="componentList">
           <!-- 动态生成的成绩结构配置 -->
         </div>
-        <button id="addComponentBtn" class="btn secondary">➕ 新增成绩项目</button>
+        <button id="addComponentBtn" class="btn btn-secondary">➕ 新增成绩项目</button>
         <div class="config-summary" id="configSummary"></div>
       </div>
     </section>
@@ -25,11 +25,11 @@
         <input type="hidden" id="studentId">
 
         <label>
-          姓名
+          <span>姓名</span>
           <input type="text" id="studentName" required>
         </label>
         <label>
-          学号
+          <span>学号</span>
           <input type="text" id="studentNo" required>
         </label>
         <label>
@@ -45,8 +45,8 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn primary" id="saveStudentBtn">💾 保存学生信息</button>
-          <button type="button" class="btn" id="resetFormBtn">🗑️ 清空表单</button>
+          <button type="submit" class="btn btn-primary" id="saveStudentBtn">💾 保存学生信息</button>
+          <button type="button" class="btn btn-outline" id="resetFormBtn">🗑️ 清空表单</button>
         </div>
       </form>
     </section>
@@ -71,14 +71,14 @@
               <option value="desc">降序</option>
             </select>
           </label>
-          <button id="applySortBtn" class="btn">🔄 应用排序</button>
+          <button id="applySortBtn" class="btn btn-outline">🔄 应用排序</button>
           <!-- 新增导出按钮 -->
-          <button id="exportExcelBtn" class="btn">📊 导出 Excel</button>
+          <button id="exportExcelBtn" class="btn btn-secondary">📊 导出 Excel</button>
           <!-- 新增：导出数据库按钮 -->
-          <button id="exportDbBtn" class="btn">💾 导出数据库</button>
+          <button id="exportDbBtn" class="btn btn-secondary">💾 导出数据库</button>
 
           <!-- 新增：导入数据按钮（支持 Excel / JSON） -->
-          <button id="importDataBtn" class="btn">📥 导入数据</button>
+          <button id="importDataBtn" class="btn btn-primary">📥 导入数据</button>
           <input type="file" id="importDataInput" accept=".xlsx,.xls,.json" style="display:none">
         </div>
         <div class="toolbar-group">
@@ -103,7 +103,7 @@
   </main>
 
   <footer class="app-footer">
-    <small>纯前端实现 · 使用浏览器本地数据库（IndexedDB）存储数据</small>
+    <p>纯前端实现 · 使用浏览器本地数据库（IndexedDB）存储数据</p>
   </footer>
 
   <!-- 新增：引入 SheetJS（xlsx）库 -->
