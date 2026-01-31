@@ -9,18 +9,18 @@
 <body>
   <main class="app-main">
     <section class="panel">
-      <h2>成绩结构与权重设置</h2>
+      <h2>📊 成绩结构与权重设置</h2>
       <div class="config-section">
         <div class="config-list" id="componentList">
           <!-- 动态生成的成绩结构配置 -->
         </div>
-        <button id="addComponentBtn" class="btn secondary">新增成绩项目</button>
+        <button id="addComponentBtn" class="btn secondary">➕ 新增成绩项目</button>
         <div class="config-summary" id="configSummary"></div>
       </div>
     </section>
 
     <section class="panel">
-      <h2>学生信息录入 / 编辑</h2>
+      <h2>👨‍🎓 学生信息录入 / 编辑</h2>
       <form id="studentForm" class="form-grid">
         <input type="hidden" id="studentId">
 
@@ -38,21 +38,21 @@
         </label>
 
         <div class="form-full-width">
-          <h3>各项成绩录入</h3>
+          <h3>📝 各项成绩录入</h3>
           <div id="scoreInputs" class="score-inputs">
             <!-- 根据当前成绩结构自动生成输入框 -->
           </div>
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn primary" id="saveStudentBtn">保存学生信息</button>
-          <button type="button" class="btn" id="resetFormBtn">清空表单</button>
+          <button type="submit" class="btn primary" id="saveStudentBtn">💾 保存学生信息</button>
+          <button type="button" class="btn" id="resetFormBtn">🗑️ 清空表单</button>
         </div>
       </form>
     </section>
 
     <section class="panel">
-      <h2>学生列表与成绩</h2>
+      <h2>📋 学生列表与成绩</h2>
       <div class="toolbar">
         <div class="toolbar-group">
           <label>
@@ -71,20 +71,20 @@
               <option value="desc">降序</option>
             </select>
           </label>
-          <button id="applySortBtn" class="btn">应用排序</button>
+          <button id="applySortBtn" class="btn">🔄 应用排序</button>
           <!-- 新增导出按钮 -->
-          <button id="exportExcelBtn" class="btn">导出 Excel</button>
+          <button id="exportExcelBtn" class="btn">📊 导出 Excel</button>
           <!-- 新增：导出数据库按钮 -->
-          <button id="exportDbBtn" class="btn">导出数据库</button>
+          <button id="exportDbBtn" class="btn">💾 导出数据库</button>
 
           <!-- 新增：导入数据按钮（支持 Excel / JSON） -->
-          <button id="importDataBtn" class="btn">导入数据</button>
+          <button id="importDataBtn" class="btn">📥 导入数据</button>
           <input type="file" id="importDataInput" accept=".xlsx,.xls,.json" style="display:none">
         </div>
         <div class="toolbar-group">
           <label>
             搜索姓名 / 学号：
-            <input type="text" id="searchInput" placeholder="输入关键字过滤">
+            <input type="text" id="searchInput" placeholder="🔍 输入关键字过滤">
           </label>
         </div>
       </div>
