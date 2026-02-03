@@ -187,7 +187,7 @@ function renderSchemaConfig() {
         <input type="text" value="${component.label}" data-comp-index="${index}" data-field="label">
       </label>
       <label>权重（总分占比）
-        <input type="number" min="0" max="100" step="1" value="${component.weight}" data-comp-index="${index}" data-field="weight">
+        <input type="number" min="0" max="100" step="0.1" value="${component.weight}" data-comp-index="${index}" data-field="weight">
       </label>
       <label>类型
         <select data-comp-index="${index}" data-field="type">
@@ -213,7 +213,7 @@ function renderSchemaConfig() {
             <input type="text" value="${sub.label}" data-comp-index="${index}" data-sub-index="${sIndex}" data-field="sub-label">
           </label>
           <label>权重（该项目内部占比）
-            <input type="number" min="0" max="100" step="1" value="${sub.weight}" data-comp-index="${index}" data-sub-index="${sIndex}" data-field="sub-weight">
+            <input type="number" min="0" max="100" step="0.1" value="${sub.weight}" data-comp-index="${index}" data-sub-index="${sIndex}" data-field="sub-weight">
           </label>
           <button class="btn btn-danger" data-action="remove-sub" data-comp-index="${index}" data-sub-index="${sIndex}">删除子项</button>
         `;
@@ -690,6 +690,7 @@ async function importDbFromJsonFile() {
 
 // 内联编辑功能
 let editingStudentId = null;
+let editingCell = null;
 let originalValues = {};
 
 // 鼠标拖动滚动功能
@@ -697,19 +698,26 @@ let isDragging = false;
 let startX = 0;
 let scrollLeft = 0;
 
-function startInlineEdit(studentId) {
+function startInlineEdit(studentId, cellToEdit = null) {
   if (editingStudentId && editingStudentId !== studentId) {
     cancelInlineEdit(editingStudentId);
   }
   
+  if (editingStudentId !== studentId) {
+    // 只有当切换到不同学生时，才重置originalValues
+    originalValues = {};
+  }
+  
   editingStudentId = studentId;
-  originalValues = {};
+  editingCell = cellToEdit;
   
   const row = document.querySelector(`tr:has([data-id="${studentId}"])`);
   if (!row) return;
   
-  // 转换所有可编辑单元格为输入框
+  // 为所有可编辑单元格创建输入框，以便tab键导航
   const editableCells = row.querySelectorAll('.editable-cell');
+  let focusInput = null;
+  
   editableCells.forEach(cell => {
     const componentKey = cell.dataset.componentKey;
     const subKey = cell.dataset.subKey;
@@ -725,7 +733,11 @@ function startInlineEdit(studentId) {
     } else {
       key = componentKey;
     }
-    originalValues[key] = currentValue;
+    
+    // 只有当该键还没有被保存时，才保存原始值
+    if (!originalValues[key]) {
+      originalValues[key] = currentValue;
+    }
     
     // 创建输入框
     const input = document.createElement('input');
@@ -736,6 +748,7 @@ function startInlineEdit(studentId) {
       input.placeholder = field === 'name' ? '姓名' : '学号';
       input.style.width = '100px';
       input.maxLength = field === 'no' ? 20 : 50;
+      input.value = currentValue;
     } else {
       // 成绩字段
       input.type = 'number';
@@ -744,16 +757,58 @@ function startInlineEdit(studentId) {
       input.step = '0.1';
       input.style.width = '60px';
       input.placeholder = '0-100';
+      // 如果当前值为0，则清空输入框
+      input.value = currentValue === '0' ? '' : currentValue;
     }
     
-    input.value = currentValue;
     input.className = 'inline-edit-input';
+    
+    // 添加Enter键保存功能
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveInlineEdit(studentId);
+      }
+    });
+    
+    // 添加输入事件监听器，实现输入框自动变宽
+    input.addEventListener('input', () => {
+      // 创建一个临时元素来计算文本宽度
+      const tempEl = document.createElement('span');
+      tempEl.style.position = 'absolute';
+      tempEl.style.left = '-9999px';
+      tempEl.style.top = '-9999px';
+      tempEl.style.whiteSpace = 'nowrap';
+      tempEl.style.fontSize = window.getComputedStyle(input).fontSize;
+      tempEl.style.fontFamily = window.getComputedStyle(input).fontFamily;
+      tempEl.textContent = input.value;
+      document.body.appendChild(tempEl);
+      
+      // 计算文本宽度并调整输入框宽度
+      const width = tempEl.offsetWidth + 20; // 加上一些 padding
+      input.style.width = Math.max(width, 60) + 'px'; // 确保最小宽度为60px
+      
+      // 移除临时元素
+      document.body.removeChild(tempEl);
+    });
+    
+    // 初始触发一次input事件，设置输入框的初始宽度
+    const inputEvent = new Event('input');
+    input.dispatchEvent(inputEvent);
     
     cell.innerHTML = '';
     cell.appendChild(input);
-    input.focus();
-    input.select();
+    
+    // 只将焦点设置在被双击的单元格的输入框上
+    if (cell === cellToEdit) {
+      focusInput = input;
+    }
   });
+  
+  // 设置焦点到被双击的单元格的输入框
+  if (focusInput) {
+    focusInput.focus();
+    focusInput.select();
+  }
   
   // 切换按钮显示
   const startBtn = row.querySelector('.edit-start-btn');
@@ -781,8 +836,9 @@ async function saveInlineEdit(studentId) {
   const student = students.find(s => s.id === studentId);
   if (!student) return;
   
-  // 收集新的字段值
+  // 收集所有可编辑单元格的新值，而不仅仅是当前编辑的单元格
   const editableCells = row.querySelectorAll('.editable-cell');
+  
   let hasChanges = false;
   let newName = student.name;
   let newNo = student.no;
@@ -865,6 +921,7 @@ async function saveInlineEdit(studentId) {
   }).then(data => {
     students = data;
     editingStudentId = null;
+    editingCell = null;
     originalValues = {};
     renderStudentTable();
   });
@@ -872,6 +929,7 @@ async function saveInlineEdit(studentId) {
 
 function cancelInlineEdit(studentId) {
   editingStudentId = null;
+  editingCell = null;
   originalValues = {};
   
   // 移除编辑模式样式
@@ -914,7 +972,26 @@ function bindEvents() {
     if (action === 'remove-comp') {
       const compIndex = Number(target.dataset.compIndex);
       if (!Number.isNaN(compIndex)) {
+        const removedComponent = currentSchema.components[compIndex];
+        const removedWeight = Number(removedComponent.weight || 0);
+        
+        // 移除项目
         currentSchema.components.splice(compIndex, 1);
+        
+        // 计算剩余项目数量
+        const remainingCount = currentSchema.components.length;
+        
+        // 调整剩余项目的权重，使总和为100
+        if (remainingCount > 0) {
+          const totalWeight = currentSchema.components.reduce((sum, c) => sum + Number(c.weight || 0), 0);
+          const weightToDistribute = 100 - totalWeight;
+          const weightPerItem = weightToDistribute / remainingCount;
+          
+          currentSchema.components.forEach(component => {
+            component.weight = Number(component.weight || 0) + weightPerItem;
+          });
+        }
+        
         saveSchema(currentSchema).then(() => renderSchemaConfig());
       }
     } else if (action === 'add-sub') {
@@ -945,12 +1022,27 @@ function bindEvents() {
 
   document.getElementById('addComponentBtn').addEventListener('click', () => {
     const newIndex = currentSchema.components.length + 1;
+    
+    // 计算现有项目的总权重
+    const totalWeight = currentSchema.components.reduce((sum, c) => sum + Number(c.weight || 0), 0);
+    
+    // 计算每个现有项目需要减少的权重
+    const existingCount = currentSchema.components.length;
+    const weightToReducePerItem = existingCount > 0 ? totalWeight / existingCount * 0.1 : 0;
+    
+    // 调整现有项目的权重
+    currentSchema.components.forEach(component => {
+      component.weight = Math.max(0, Number(component.weight || 0) - weightToReducePerItem);
+    });
+    
+    // 添加新项目，分配10%的权重
     currentSchema.components.push({
       key: `comp${newIndex}`,
       label: `新项目${newIndex}`,
-      weight: 0,
+      weight: 10,
       type: 'simple'
     });
+    
     saveSchema(currentSchema).then(() => renderSchemaConfig());
   });
 
@@ -1069,7 +1161,7 @@ function bindEvents() {
     if (!cell) return;
     const studentId = Number(cell.dataset.studentId);
     if (!Number.isNaN(studentId)) {
-      startInlineEdit(studentId);
+      startInlineEdit(studentId, cell);
     }
   });
 
