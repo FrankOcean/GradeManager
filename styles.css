@@ -116,12 +116,13 @@ body {
 
 /* 布局容器 */
 .app-main {
-  max-width: 1400px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
+  width: 99%;
+  max-width: none;
+  margin: 1rem auto;
+  padding: 0 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 /* 页面标题 */
@@ -155,7 +156,7 @@ body {
 .panel {
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
-  padding: 2.5rem;
+  padding: 1.5rem;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-light);
   transition: all var(--transition-normal);
@@ -549,11 +550,60 @@ input[type="number"]::placeholder {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  overflow-y: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-md);
   background-color: var(--bg-secondary);
   position: relative;
+  max-height: 70vh;
+}
+
+.table-wrapper.dragging {
+  cursor: grabbing;
+}
+
+/* 恢复底部滚动条样式 */
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
+}
+
+.table-wrapper::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }
 
 .table-wrapper::before {
@@ -569,8 +619,10 @@ input[type="number"]::placeholder {
 
 table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
   font-size: 0.875rem;
+  table-layout: fixed;
 }
 
 thead {
@@ -582,12 +634,21 @@ thead {
 }
 
 th, td {
-  padding: 1rem 1.25rem;
+  padding: 1rem 0.75rem;
   text-align: left;
   vertical-align: middle;
   border-bottom: 1px solid var(--border-light);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+/* 设置固定列宽 */
+th:nth-child(1), td:nth-child(1) { width: 80px; } /* 序号 */
+th:nth-child(2), td:nth-child(2) { width: 120px; } /* 姓名 */
+th:nth-child(3), td:nth-child(3) { width: 120px; } /* 学号 */
+th:nth-child(4), td:nth-child(4) { width: 80px; } /* 总成绩 */
+th:last-child, td:last-child { width: 150px; } /* 操作 */
 
 th {
   font-family: 'Poppins', sans-serif;
@@ -689,21 +750,21 @@ tbody tr:hover {
 /* 响应式设计 */
 @media (max-width: 1200px) {
   .app-main {
-    max-width: 1200px;
-    padding: 0 1.25rem;
+    width: 99%;
+    padding: 0 1rem;
   }
   
   .panel {
-    padding: 2rem;
+    padding: 1.5rem;
   }
 }
 
 @media (max-width: 1024px) {
   .app-main {
-    max-width: 100%;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    gap: 1.5rem;
+    width: 99%;
+    margin: 1rem auto;
+    padding: 0 0.75rem;
+    gap: 1.25rem;
   }
   
   .page-header h1 {
@@ -717,9 +778,10 @@ tbody tr:hover {
 
 @media (max-width: 768px) {
   .app-main {
-    margin: 1rem auto;
-    padding: 0 0.75rem;
-    gap: 1.25rem;
+    width: 99%;
+    margin: 0.75rem auto;
+    padding: 0 0.5rem;
+    gap: 1rem;
   }
   
   .page-header h1 {
@@ -821,9 +883,52 @@ tbody tr:hover {
 
 @media (max-width: 480px) {
   .app-main {
-    padding: 0 0.5rem;
-    gap: 1rem;
+    width: 99%;
+    padding: 0 0.25rem;
+    gap: 0.75rem;
   }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+  
+  .table-wrapper table {
+    min-width: 1100px; /* 更宽以确保所有列可见 */
+    font-size: 0.65rem;
+  }
+  
+  /* 进一步压缩列宽 */
+  th:nth-child(1), td:nth-child(1) { width: 50px; } /* 序号 */
+  th:nth-child(2), td:nth-child(2) { width: 80px; } /* 姓名 */
+  th:nth-child(3), td:nth-child(3) { width: 80px; } /* 学号 */
+  th:nth-child(4), td:nth-child(4) { width: 60px; } /* 总成绩 */
+  th:last-child, td:last-child { width: 120px; } /* 操作 */
+  
+  th, td {
+    padding: 0.3rem 0.2rem;
+    font-size: 0.65rem;
+  }
+  
+  .inline-edit-input {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.15rem;
+    min-height: 20px;
+  }
+  
+  /* 调整输入框宽度 */
+  .editing-row .editable-text input {
+    width: 60px !important;
+  }
+  
+  .editing-row .editable-cell:not(.editable-text) input {
+    width: 40px !important;
+  }
+  
+  .editing-row td:nth-child(1) input {
+    width: 30px !important;
+  }
+}
   
   .page-header h1 {
     font-size: 1.5rem;
@@ -917,5 +1022,168 @@ tbody tr:hover {
 
 .gap-4 {
   gap: 1rem;
+}
+
+/* 内联编辑样式 */
+.editable-cell {
+  cursor: pointer;
+  position: relative;
+  transition: background-color var(--transition-fast);
+}
+
+.editable-cell:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.editable-cell:hover::after {
+  content: '✏️';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.editing-row {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+  border-left-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.inline-edit-input {
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  transition: all var(--transition-fast);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.inline-edit-input:focus {
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  z-index: 10;
+  position: relative;
+}
+
+/* 编辑模式下的单元格样式 */
+.editing-row .editable-cell {
+  padding: 0.5rem 0.375rem;
+  vertical-align: middle;
+}
+
+.editing-row .editable-cell input {
+  min-height: 28px;
+}
+
+/* 为序号输入框设置特定样式 */
+.editing-row td:nth-child(1) input {
+  width: 60px !important;
+  text-align: center;
+}
+
+/* 为成绩输入框设置特定样式 */
+.editing-row .editable-cell:not(.editable-text) input {
+  text-align: center;
+  width: 60px !important;
+}
+
+/* 为文本输入框设置特定样式 */
+.editing-row .editable-cell.editable-text input {
+  text-align: left;
+  width: 100px !important;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 编辑模式下的表格包装器样式 */
+.table-wrapper.editing-mode {
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.table-wrapper.editing-mode table {
+  min-width: max-content;
+}
+
+/* 防止滚动条闪烁 */
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+.table-wrapper::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 确保编辑模式下行不会被压缩 */
+.editing-row {
+  min-height: 60px;
+  position: relative;
+  z-index: 5;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .table-wrapper {
+    cursor: grab;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+  
+  .table-wrapper table {
+    min-width: 1000px; /* 确保所有列都能显示 */
+    font-size: 0.75rem;
+  }
+  
+  /* 调整列宽，确保手机端也能看到所有列 */
+  th:nth-child(1), td:nth-child(1) { width: 60px; } /* 序号 */
+  th:nth-child(2), td:nth-child(2) { width: 100px; } /* 姓名 */
+  th:nth-child(3), td:nth-child(3) { width: 100px; } /* 学号 */
+  th:nth-child(4), td:nth-child(4) { width: 70px; } /* 总成绩 */
+  
+  th, td {
+    padding: 0.4rem 0.25rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+  
+  .inline-edit-input {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.2rem;
+    min-height: 22px;
+  }
+  
+  /* 调整输入框宽度 */
+  .editing-row .editable-text input {
+    width: 80px !important;
+  }
+  
+  .editing-row .editable-cell:not(.editable-text) input {
+    width: 50px !important;
+  }
+  
+  .editing-row td:nth-child(1) input {
+    width: 40px !important;
+  }
 }
 

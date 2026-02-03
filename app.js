@@ -363,8 +363,8 @@ function renderStudentTable() {
       <td>
         <input type="number" min="1" step="1" value="${s.rank ?? ''}" data-rank-id="${s.id}" style="width:70px;">
       </td>
-      <td>${s.name || ''}</td>
-      <td>${s.no || ''}</td>
+      <td class="editable-cell editable-text" data-student-id="${s.id}" data-field="name">${s.name || ''}</td>
+      <td class="editable-cell editable-text" data-student-id="${s.id}" data-field="no">${s.no || ''}</td>
       <td>${s.totalScore ?? ''}</td>
     `;
 
@@ -372,11 +372,13 @@ function renderStudentTable() {
     currentSchema.components.forEach(component => {
       if (component.type === 'simple') {
         const d = detail[component.key];
-        scoreCols += `<td>${d ? d.raw : ''}</td>`;
+        const rawValue = d ? d.raw : '';
+        scoreCols += `<td class="editable-cell" data-student-id="${s.id}" data-component-key="${component.key}" data-sub-key="">${rawValue}</td>`;
       } else if (component.type === 'composite') {
         (component.subcomponents || []).forEach(sub => {
           const d = detail[component.key]?.subDetail?.[sub.key];
-          scoreCols += `<td>${d ? d.raw : ''}</td>`;
+          const rawValue = d ? d.raw : '';
+          scoreCols += `<td class="editable-cell" data-student-id="${s.id}" data-component-key="${component.key}" data-sub-key="${sub.key}">${rawValue}</td>`;
         });
       }
     });
@@ -384,7 +386,9 @@ function renderStudentTable() {
     const actionCol = `
       <td>
         <div class="table-actions">
-          <button class="btn btn-secondary" data-action="edit" data-id="${s.id}">编辑</button>
+          <button class="btn btn-success edit-save-btn" data-action="save" data-id="${s.id}" style="display:none;">保存</button>
+          <button class="btn btn-outline edit-cancel-btn" data-action="cancel" data-id="${s.id}" style="display:none;">取消</button>
+          <button class="btn btn-secondary edit-start-btn" data-action="edit" data-id="${s.id}">编辑</button>
           <button class="btn btn-danger" data-action="delete" data-id="${s.id}">删除</button>
         </div>
       </td>
@@ -684,6 +688,201 @@ async function importDbFromJsonFile() {
   }
 }
 
+// 内联编辑功能
+let editingStudentId = null;
+let originalValues = {};
+
+// 鼠标拖动滚动功能
+let isDragging = false;
+let startX = 0;
+let scrollLeft = 0;
+
+function startInlineEdit(studentId) {
+  if (editingStudentId && editingStudentId !== studentId) {
+    cancelInlineEdit(editingStudentId);
+  }
+  
+  editingStudentId = studentId;
+  originalValues = {};
+  
+  const row = document.querySelector(`tr:has([data-id="${studentId}"])`);
+  if (!row) return;
+  
+  // 转换所有可编辑单元格为输入框
+  const editableCells = row.querySelectorAll('.editable-cell');
+  editableCells.forEach(cell => {
+    const componentKey = cell.dataset.componentKey;
+    const subKey = cell.dataset.subKey;
+    const field = cell.dataset.field;
+    const currentValue = cell.textContent.trim();
+    
+    // 保存原始值
+    let key;
+    if (field) {
+      key = field;
+    } else if (subKey) {
+      key = `${componentKey}.${subKey}`;
+    } else {
+      key = componentKey;
+    }
+    originalValues[key] = currentValue;
+    
+    // 创建输入框
+    const input = document.createElement('input');
+    
+    if (field === 'name' || field === 'no') {
+      // 文本字段（姓名、学号）
+      input.type = 'text';
+      input.placeholder = field === 'name' ? '姓名' : '学号';
+      input.style.width = '100px';
+      input.maxLength = field === 'no' ? 20 : 50;
+    } else {
+      // 成绩字段
+      input.type = 'number';
+      input.min = '0';
+      input.max = '100';
+      input.step = '0.1';
+      input.style.width = '60px';
+      input.placeholder = '0-100';
+    }
+    
+    input.value = currentValue;
+    input.className = 'inline-edit-input';
+    
+    cell.innerHTML = '';
+    cell.appendChild(input);
+    input.focus();
+    input.select();
+  });
+  
+  // 切换按钮显示
+  const startBtn = row.querySelector('.edit-start-btn');
+  const saveBtn = row.querySelector('.edit-save-btn');
+  const cancelBtn = row.querySelector('.edit-cancel-btn');
+  
+  if (startBtn) startBtn.style.display = 'none';
+  if (saveBtn) saveBtn.style.display = 'inline-block';
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  
+  // 添加行编辑样式
+  row.classList.add('editing-row');
+  
+  // 为表格包装器添加编辑模式样式，确保滚动条可见
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (tableWrapper) {
+    tableWrapper.classList.add('editing-mode');
+  }
+}
+
+async function saveInlineEdit(studentId) {
+  const row = document.querySelector(`tr:has([data-id="${studentId}"])`);
+  if (!row) return;
+  
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
+  
+  // 收集新的字段值
+  const editableCells = row.querySelectorAll('.editable-cell');
+  let hasChanges = false;
+  let newName = student.name;
+  let newNo = student.no;
+  
+  editableCells.forEach(cell => {
+    const input = cell.querySelector('input');
+    if (!input) return;
+    
+    const componentKey = cell.dataset.componentKey;
+    const subKey = cell.dataset.subKey;
+    const field = cell.dataset.field;
+    const newValue = input.value.trim();
+    let key;
+    
+    if (field) {
+      key = field;
+    } else if (subKey) {
+      key = `${componentKey}.${subKey}`;
+    } else {
+      key = componentKey;
+    }
+    
+    const oldValue = originalValues[key] || '';
+    
+    if (newValue !== oldValue) {
+      hasChanges = true;
+      
+      if (field === 'name') {
+        newName = newValue;
+      } else if (field === 'no') {
+        newNo = newValue;
+      } else {
+        // 成绩字段
+        if (!student.scores) {
+          student.scores = {};
+        }
+        
+        if (subKey) {
+          if (!student.scores[componentKey]) {
+            student.scores[componentKey] = {};
+          }
+          student.scores[componentKey][subKey] = newValue === '' ? 0 : Number(newValue);
+        } else {
+          student.scores[componentKey] = newValue === '' ? 0 : Number(newValue);
+        }
+      }
+    }
+  });
+  
+  if (!hasChanges) {
+    cancelInlineEdit(studentId);
+    return;
+  }
+  
+  // 验证必填字段
+  if (!newName.trim() || !newNo.trim()) {
+    alert('姓名和学号不能为空！');
+    return;
+  }
+  
+  // 检查学号重复
+  const noExists = await checkStudentNoExists(newNo, studentId);
+  if (noExists) {
+    alert('该学号已存在，请使用不同的学号！');
+    return;
+  }
+  
+  // 更新学生信息
+  student.name = newName.trim();
+  student.no = newNo.trim();
+  
+  // 移除编辑模式样式
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (tableWrapper) {
+    tableWrapper.classList.remove('editing-mode');
+  }
+  
+  updateStudent(student).then(() => {
+    return getAllStudents();
+  }).then(data => {
+    students = data;
+    editingStudentId = null;
+    originalValues = {};
+    renderStudentTable();
+  });
+}
+
+function cancelInlineEdit(studentId) {
+  editingStudentId = null;
+  originalValues = {};
+  
+  // 移除编辑模式样式
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (tableWrapper) {
+    tableWrapper.classList.remove('editing-mode');
+  }
+  
+  renderStudentTable();
+}
+
 // 事件绑定
 function bindEvents() {
   // 成绩结构修改 - 使用 blur 和 keydown 事件，避免输入时跳出来
@@ -849,10 +1048,11 @@ function bindEvents() {
     if (Number.isNaN(id)) return;
 
     if (action === 'edit') {
-      const stu = students.find(s => s.id === id);
-      if (stu) {
-        fillFormWithStudent(stu);
-      }
+      startInlineEdit(id);
+    } else if (action === 'save') {
+      saveInlineEdit(id);
+    } else if (action === 'cancel') {
+      cancelInlineEdit(id);
     } else if (action === 'delete') {
       if (confirm('确定要删除该学生吗？')) {
         deleteStudent(id).then(() => getAllStudents()).then(data => {
@@ -862,6 +1062,63 @@ function bindEvents() {
       }
     }
   });
+
+  // 处理可编辑单元格的双击事件
+  document.getElementById('studentTableBody').addEventListener('dblclick', (e) => {
+    const cell = e.target.closest('.editable-cell');
+    if (!cell) return;
+    const studentId = Number(cell.dataset.studentId);
+    if (!Number.isNaN(studentId)) {
+      startInlineEdit(studentId);
+    }
+  });
+
+  // 鼠标中键拖动滚动功能
+  const tableWrapper = document.querySelector('.table-wrapper');
+  
+  if (tableWrapper) {
+    // 鼠标按下
+    tableWrapper.addEventListener('mousedown', (e) => {
+      // 只响应中键点击
+      if (e.button !== 1) return;
+      
+      e.preventDefault();
+      isDragging = true;
+      tableWrapper.classList.add('dragging');
+      
+      startX = e.pageX;
+      scrollLeft = tableWrapper.scrollLeft;
+      
+      return false;
+    });
+
+    // 鼠标移动
+    tableWrapper.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      
+      const x = e.pageX;
+      const walk = (startX - x) * 1.5; // 滚动速度，调整为正向
+      tableWrapper.scrollLeft = scrollLeft + walk;
+    });
+
+    // 鼠标释放
+    const stopDragging = () => {
+      isDragging = false;
+      tableWrapper.classList.remove('dragging');
+    };
+
+    tableWrapper.addEventListener('mouseup', stopDragging);
+    tableWrapper.addEventListener('mouseleave', stopDragging);
+    
+    // 防止中键默认行为和文本选择
+    tableWrapper.addEventListener('selectstart', (e) => {
+      if (isDragging) {
+        e.preventDefault();
+        return false;
+      }
+    });
+  }
 
   document.getElementById('studentTableBody').addEventListener('change', (e) => {
     const target = e.target;
