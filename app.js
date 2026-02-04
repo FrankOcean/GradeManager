@@ -263,27 +263,119 @@ function renderSchemaConfig() {
 function renderScoreInputs() {
   const container = document.getElementById('scoreInputs');
   container.innerHTML = '';
+  
+  // 重置所有样式，确保没有继承的样式影响
+  container.style.cssText = `
+    display: block;
+    max-width: 100%;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: rgba(249, 250, 251, 1);
+    border-radius: 0.5rem;
+  `;
+
+  // 创建一个flex容器来存放输入框
+  const flexContainer = document.createElement('div');
+  flexContainer.style.cssText = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    max-width: 100%;
+  `;
 
   currentSchema.components.forEach(component => {
     if (component.type === 'simple') {
-      const wrapper = document.createElement('label');
-      wrapper.innerHTML = `
-        ${component.label}（0-100）
-        <input type="number" min="0" max="100" step="0.1" data-score-key="${component.key}">
+      const inputGroup = document.createElement('div');
+      inputGroup.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        min-width: 180px;
+        flex: 1 1 180px;
+        max-width: 250px;
       `;
-      container.appendChild(wrapper);
+      
+      const label = document.createElement('span');
+      label.textContent = `${component.label}（0-100）`;
+      label.style.cssText = `
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+      `;
+      
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.max = '100';
+      input.step = '0.1';
+      input.dataset.scoreKey = component.key;
+      input.style.cssText = `
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        outline: none;
+        transition: all var(--transition-normal);
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        width: 100%;
+        box-sizing: border-box;
+      `;
+      
+      inputGroup.appendChild(label);
+      inputGroup.appendChild(input);
+      flexContainer.appendChild(inputGroup);
     } else if (component.type === 'composite') {
       const subs = component.subcomponents || [];
       subs.forEach(sub => {
-        const wrapper = document.createElement('label');
-        wrapper.innerHTML = `
-          ${component.label} - ${sub.label}（0-100）
-          <input type="number" min="0" max="100" step="0.1" data-score-key="${component.key}" data-sub-key="${sub.key}">
+        const inputGroup = document.createElement('div');
+        inputGroup.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          min-width: 180px;
+          flex: 1 1 180px;
+          max-width: 250px;
         `;
-        container.appendChild(wrapper);
+        
+        const label = document.createElement('span');
+        label.textContent = `${component.label} - ${sub.label}（0-100）`;
+        label.style.cssText = `
+          font-size: 0.875rem;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+          color: var(--text-secondary);
+        `;
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.max = '100';
+        input.step = '0.1';
+        input.dataset.scoreKey = component.key;
+        input.dataset.subKey = sub.key;
+        input.style.cssText = `
+          padding: 0.75rem 1rem;
+          font-size: 0.875rem;
+          border: 2px solid var(--border-light);
+          border-radius: var(--radius-md);
+          outline: none;
+          transition: all var(--transition-normal);
+          background-color: var(--bg-secondary);
+          color: var(--text-primary);
+          width: 100%;
+          box-sizing: border-box;
+        `;
+        
+        inputGroup.appendChild(label);
+        inputGroup.appendChild(input);
+        flexContainer.appendChild(inputGroup);
       });
     }
   });
+
+  container.appendChild(flexContainer);
 }
 
 function renderStudentTable() {
